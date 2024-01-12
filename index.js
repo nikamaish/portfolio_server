@@ -1,7 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { recaptcha } = require('google-recaptcha');
-const fetch = require('cross-fetch');
 const fs = require('fs');
 const cors = require('cors');
 require('dotenv').config();
@@ -20,35 +18,22 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.post('/send-message', async (req, res) => {
-  const { email: senderEmail, message, recaptchaToken } = req.body;
+app.post('/send-message', (req, res) => {
+  const { email: senderEmail, message } = req.body;
 
-  // Verify reCAPTCHA token
-  try {
-    await recaptcha.verify({
-      secret: process.env.RECAPTCHA_SECRET_KEY,
-      response: recaptchaToken,
-    });
+  // Define the message content
+  const content = `Sender's Email: ${senderEmail}\nMessage: ${message}\n\n`;
 
-    // reCAPTCHA verification successful
-
-    // Define the message content
-    const content = `Sender's Email: ${senderEmail}\nMessage: ${message}\n\n`;
-
-    // Append the message to a file
-    fs.appendFile('msg.txt', content, (err) => {
-      if (err) {
-        console.error('Error saving message:', err);
-        res.status(500).send(err.toString());
-      } else {
-        console.log('Message saved successfully.');
-        res.status(200).json({ message: 'Message saved successfully.' });
-      }
-    });
-  } catch (error) {
-    // reCAPTCHA verification failed
-    res.status(403).send('reCAPTCHA verification failed.');
-  }
+  // Append the message to a file
+  fs.appendFile('msg.txt', content, (err) => {
+    if (err) {
+      console.error('Error saving message:', err);
+      res.status(500).send(err.toString());
+    } else {
+      console.log('Message saved successfully.');
+      res.status(200).json({ message: 'Message saved successfully.' });
+    }
+  });
 });
 
 app.listen(PORT, () => {
